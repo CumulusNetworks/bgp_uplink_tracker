@@ -32,7 +32,7 @@ def logging_setup():
     log = logging.getLogger(__name__)
     log.setLevel(logging.DEBUG)
     handler = logging.handlers.SysLogHandler(address = '/dev/log')
-    formatter = logging.Formatter('Target_Tracking: %(message)s')
+    formatter = logging.Formatter('BGP_Uplink_Tracking: %(message)s')
     handler.setFormatter(formatter)
     log.addHandler(handler)
 

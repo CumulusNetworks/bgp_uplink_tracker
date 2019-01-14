@@ -49,7 +49,7 @@ EOT
 
 echo "   -Enabling $PROGRAM to start automatically at boot..."
 systemctl daemon-reload
-systemctl enable target_tracker.service
+systemctl enable bgp_uplink_tracker.service
 echo "##############################"
 echo "### Installation Complete! ###"
 echo -e "##############################\n"
