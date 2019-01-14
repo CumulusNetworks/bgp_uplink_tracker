@@ -9,17 +9,12 @@ as to influence hosts to not send data to this
 switch.
 """
 
-print("""
-#########################################
-          BGP Uplink Watcher
-#########################################
-  originally written by Eric Pulvino
-""")
-
 import os
 import json
 import time
 import pprint
+import logging
+import logging.handlers
 import subprocess
 from pyroute2 import IPRoute
 
@@ -28,6 +23,25 @@ frr_logfile='/var/log/frr/frr.log'
 clag_link_state = None
 
 bgp_uplinks = {} 
+
+def logging_setup():
+    """ Logging Setup Function
+    This function prepares the logging used throughout the script.
+    """
+    global log
+    log = logging.getLogger(__name__)
+    log.setLevel(logging.DEBUG)
+    handler = logging.handlers.SysLogHandler(address = '/dev/log')
+    formatter = logging.Formatter('Target_Tracking: %(message)s')
+    handler.setFormatter(formatter)
+    log.addHandler(handler)
+
+def print_and_log(somestring):
+    """ Print and Log Function
+    Using this function allows for messages to go to multiple destinations.
+    """
+    print somestring
+    log.info(somestring)
 
 def detect_bgp_neighbors():
     """ Detect BGP Neighbor Function
@@ -48,7 +62,7 @@ def detect_bgp_neighbors():
             bgp_uplinks[peer] = 'up'
         else: 
             bgp_uplinks[peer] = 'down'
-    print("Detected the following BGP Neighbors:\n%s"%bgp_uplinks)    
+    print_and_log("Detected the following BGP Neighbors:\n%s"%bgp_uplinks)    
 
 def follow_file(thefile):
     """ Follow Function
@@ -82,7 +96,7 @@ def change_link_state(link_list,linkstate):
 
     # Down the clag links individually by ifindex
     for interface in link_list:
-        print("    bringing %s interface %s..."%(interface,linkstate))
+        print_and_log("    bringing %s interface %s..."%(interface,linkstate))
         ip.link('set', index=ifindex_dict[interface], state=linkstate)
 
 def handle_clag_links(linkstate):
@@ -94,7 +108,7 @@ def handle_clag_links(linkstate):
     """
     if linkstate != "up" and linkstate != "down": 
         raise SystemExit("ERROR: Valid states are 'up' or 'down'.")
-    print("INFO: CLAG Links need to be brought %s."%linkstate)
+    print_and_log("INFO: CLAG Links need to be brought %s."%linkstate)
     try:
         clag_info_json = subprocess.check_output(['/usr/bin/clagctl','-j'])
     except:
@@ -105,7 +119,7 @@ def handle_clag_links(linkstate):
         if clag_info['clagIntfs'][interface]['clagId'] != 0 and clag_info['clagIntfs'][interface]['operstate'] != linkstate: 
             clag_links.append(interface)
     if len(clag_links) > 0: change_link_state(clag_links,linkstate)
-    else: print("INFO: There are no CLAG links which need adjustment.")
+    else: print_and_log("INFO: There are no CLAG links which need adjustment.")
 
 def track_neighbors(neighbor,state):
     """ Track Neighbors Function
@@ -151,13 +165,21 @@ def parse_line(line):
     words=substring.split()
     neighbor = words[1].split('(')[0]
     state = words[5].lower()
-    print('INFO: Neighbor %s is %s.'%(neighbor,state))
+    print_and_log('INFO: Neighbor %s is %s.'%(neighbor,state))
 
     # Handle the neighbor state update
     track_neighbors(neighbor,state)
 
 
 def main():
+
+    logging_setup()
+    print_and_log("""
+#########################################
+          BGP Uplink Watcher
+#########################################
+  originally written by Eric Pulvino
+""")
 
     detect_bgp_neighbors()
 
@@ -168,7 +190,7 @@ def main():
     # Parse the lines as they arrive
     for line in lines:
         if "bgpd" in line and "ADJCHANGE" in line:
-            #print(line)
+            #print_and_log(line)
             parse_line(line)
 
 
