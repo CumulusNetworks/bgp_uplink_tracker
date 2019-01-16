@@ -63,5 +63,5 @@ echo "               'sudo systemctl restart bgp_uplink_tracker.service'"
 echo "        2). Check the health of the running service."
 echo "               'sudo systemctl status bgp_uplink_tracker.service'"
 echo "        4). Monitor syslog for updates from the service."
-echo "               'sudo grep bgp_uplink_tracker /var/log/syslog'"
+echo "               'sudo grep BGP_Uplink_Tracking /var/log/syslog'"
 
