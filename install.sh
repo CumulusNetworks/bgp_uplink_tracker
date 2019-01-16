@@ -14,7 +14,7 @@ fi
 
 echo "   -Installing Dependencies (Internet is Required)"
 VRF=$(ip vrf identify)
-if VRF == "mgmt"; then
+if [ "$VRF" == "mgmt" ]; then
     ping -I mgmt 8.8.8.8 -c2 &> /dev/null
 else
     ping 8.8.8.8 -c2 &> /dev/null
