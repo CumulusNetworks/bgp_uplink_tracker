@@ -13,7 +13,12 @@ if [ "$(whoami)" != "root" ]; then
 fi
 
 echo "   -Installing Dependencies (Internet is Required)"
-ping 8.8.8.8 -c2 &> /dev/null
+VRF=$(ip vrf identify)
+if VRF == "mgmt"; then
+    ping -I mgmt 8.8.8.8 -c2 &> /dev/null
+else
+    ping 8.8.8.8 -c2 &> /dev/null
+fi
 if [ "$?" == "0" ]; then
     apt-get update -y >/dev/null
     apt-get install python-pip -qy >/dev/null
